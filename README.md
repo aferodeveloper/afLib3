@@ -36,7 +36,7 @@ AfLib3 is packaged as an Arduino-compatible library for ease of installing in th
 
 ### Release Notes ###
 
-afLib3 1.0.${BUILD_NUMBER} 7/23/18 Release Notes
+afLib3 1.0.288 7/23/18 Release Notes
 
 * New, more logical API.
 * Atmel SAMD21 support (UART only).

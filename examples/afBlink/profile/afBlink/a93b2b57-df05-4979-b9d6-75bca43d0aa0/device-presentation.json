@@ -1,0 +1,128 @@
+{
+	"active": true,
+	"valid": true,
+	"friendlyName": "Default Presentation",
+	"createdTimestamp": 1522376672237,
+	"deviceProfileId": "a2ae90ef-49e1-4d76-93f2-bd98f9551812",
+	"presentationId": "b74afc57-acb7-45ac-96ad-f8d60347ed71",
+	"presentationDefinition": {
+		"label": "afBlink",
+		"attributeOptions": {
+			"1": {
+				"label": "Blink",
+				"valueOptions": [
+					{
+						"apply": {
+							"label": "Stop",
+							"state": "standby"
+						},
+						"match": "false"
+					},
+					{
+						"apply": {
+							"label": "Start",
+							"state": "running"
+						},
+						"match": "true"
+					}
+				],
+				"flags": [
+					"primaryOperation"
+				]
+			},
+			"1024": {
+				"label": "LED",
+				"valueOptions": [
+					{
+						"apply": {
+							"label": "ON",
+							"state": "running"
+						},
+						"match": "0"
+					},
+					{
+						"apply": {
+							"label": "OFF",
+							"state": "standby"
+						},
+						"match": "1"
+					}
+				],
+				"flags": []
+			}
+		},
+		"gauge": {
+			"foreground": {
+				"images": [
+					{
+						"uri": "device_icon_light.png"
+					}
+				]
+			},
+			"background": {
+				"images": []
+			},
+			"displayRules": []
+		},
+		"groups": [
+			{
+				"controls": [
+					1,
+					2
+				],
+				"gauge": {
+					"background": {
+						"images": []
+					},
+					"displayRules": [],
+					"foreground": {
+						"images": [
+							{
+								"uri": "device_control_icon_light.png"
+							}
+						]
+					},
+					"label": "",
+					"labelSize": ""
+				},
+				"groups": [],
+				"label": "Blink",
+				"id": 1449612955889
+			}
+		],
+		"controls": [
+			{
+				"attributeMap": {
+					"value": 1
+				},
+				"controlType": "menuControl",
+				"id": 1,
+				"displayRules": [
+					{
+						"match": "*",
+						"apply": {
+							"enabled": true,
+							"viewStyle": "INLINE"
+						}
+					}
+				]
+			},
+			{
+				"id": 2,
+				"controlType": "stringControl",
+				"attributeMap": {
+					"value": 1024
+				},
+				"displayRules": [
+					{
+						"match": "*",
+						"apply": {
+							"enabled": true,
+							"viewStyle": "INLINE"
+						}
+					}
+				]
+			}
+		]
+	}
+}

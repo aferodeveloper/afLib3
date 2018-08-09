@@ -1,0 +1,27 @@
+{
+	"name": "attribute_dumper",
+	"description": "ASR-2 Profile to do... well, nothing but provide attributes for an MCU app to read.",
+	"createdTimestamp": 1503433541890,
+	"updatedTimestamp": 1503433541890,
+	"deviceTypeId": "b1dedbb6-25d6-4d92-a784-12246bc3b7d8",
+	"partnerId": "",
+	"disconnectNotificationLevel": "LOW",
+	"virtual": false,
+	"deviceTags": [],
+	"moduleConfiguration": {
+		"id": "c7168904-abd3-4dc4-975c-038a03457b0c",
+		"name": "Modulo-2",
+		"module": {
+			"id": "621b666f-ff31-4167-be3b-694123e7c408",
+			"name": "ASR-2",
+			"createdTimestampMs": 1497546309908,
+			"updatedTimestampMs": 1497546309908
+		},
+		"minimumFirmwareVersions": {
+			"2003": "13490"
+		},
+		"developmentTarget": true,
+		"createdTimestampMs": 1497547254457,
+		"updatedTimestampMs": 1497547254457
+	}
+}

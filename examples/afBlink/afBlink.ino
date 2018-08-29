@@ -453,10 +453,6 @@ void printAttribute(const char* label, const uint16_t attributeId, const uint16_
             printAttrStr(label, "AF_REBOOT_REASON", attributeId, valueLen, value);
             break;
 
-        case AF_SYSTEM_MCU_INTERFACE:
-            printAttr8(label, "AF_SYSTEM_MCU_INTERFACE", attributeId, valueLen, value);
-            break;
-
         case AF_SYSTEM_LINKED_TIMESTAMP:
             printAttr32(label, "AF_SYSTEM_LINKED_TIMESTAMP", attributeId, valueLen, value);
             break;

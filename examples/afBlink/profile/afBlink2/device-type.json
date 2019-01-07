@@ -1,8 +1,8 @@
 {
 	"name": "afBlink2",
-	"description": "This profile is used with the afBlink example to demonstrate using MCU and I/O attributes an attached Arduino-compatible MCU.",
+	"description": "This profile is used with the afBlink example in the afLib3 Arduino Library to demonstrate using an MCU with a Modulo-2 development board.",
 	"createdTimestamp": 1493828256749,
-	"updatedTimestamp": 1522374794640,
+	"updatedTimestamp": 1545154582420,
 	"deviceTypeId": "1816a561-c0d9-49ed-b58e-04b264af3688",
 	"partnerId": "",
 	"disconnectNotificationLevel": "MEDIUM",

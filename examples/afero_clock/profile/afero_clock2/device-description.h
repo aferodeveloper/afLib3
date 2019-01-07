@@ -1,6 +1,6 @@
 /*
  * Afero Device Profile header file
- * Device Description:		b585e33e-7da9-4c37-8da9-a895a33a88ac
+ * Device Description:		0548dcc6-9c37-4965-b5ae-8adcc37410e0
  * Schema Version:	2
  */
 
@@ -86,10 +86,10 @@
 #define AF_PROFILE_VERSION_SZ                                        8
 #define AF_PROFILE_VERSION_TYPE                  ATTRIBUTE_TYPE_SINT64
 
-// Attribute WiFi Version
-#define AF_WIFI_VERSION                                           2006
-#define AF_WIFI_VERSION_SZ                                           8
-#define AF_WIFI_VERSION_TYPE                     ATTRIBUTE_TYPE_SINT64
+// Attribute Wi-Fi Version
+#define AF_WI_FI_VERSION                                          2006
+#define AF_WI_FI_VERSION_SZ                                          8
+#define AF_WI_FI_VERSION_TYPE                    ATTRIBUTE_TYPE_SINT64
 
 // Attribute Offline Schedules Enabled
 #define AF_OFFLINE_SCHEDULES_ENABLED                             59001
@@ -111,15 +111,15 @@
 #define AF_SYSTEM_CONNECTED_SSID_SZ                                 33
 #define AF_SYSTEM_CONNECTED_SSID_TYPE             ATTRIBUTE_TYPE_UTF8S
 
-// Attribute WiFi Bars
-#define AF_SYSTEM_WIFI_BARS                                      65005
-#define AF_SYSTEM_WIFI_BARS_SZ                                       1
-#define AF_SYSTEM_WIFI_BARS_TYPE                  ATTRIBUTE_TYPE_SINT8
+// Attribute Wi-Fi Bars
+#define AF_SYSTEM_WI_FI_BARS                                     65005
+#define AF_SYSTEM_WI_FI_BARS_SZ                                      1
+#define AF_SYSTEM_WI_FI_BARS_TYPE                 ATTRIBUTE_TYPE_SINT8
 
-// Attribute WiFi Steady State
-#define AF_SYSTEM_WIFI_STEADY_STATE                              65006
-#define AF_SYSTEM_WIFI_STEADY_STATE_SZ                               1
-#define AF_SYSTEM_WIFI_STEADY_STATE_TYPE          ATTRIBUTE_TYPE_SINT8
+// Attribute Wi-Fi Steady State
+#define AF_SYSTEM_WI_FI_STEADY_STATE                             65006
+#define AF_SYSTEM_WI_FI_STEADY_STATE_SZ                              1
+#define AF_SYSTEM_WI_FI_STEADY_STATE_TYPE         ATTRIBUTE_TYPE_SINT8
 
 // Attribute Command
 #define AF_SYSTEM_COMMAND                                        65012

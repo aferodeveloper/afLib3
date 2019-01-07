@@ -1,5 +1,5 @@
 {
-	"deviceDescriptionId": "47268272-b611-4af5-8e1b-a4c70e6d9b46",
+	"deviceDescriptionId": "7c287a7e-8a8e-4d24-bb70-9605eaa9e563",
 	"partnerId": "1da7b817-882e-4074-91b2-ca57255ace0a",
 	"schemaVersion": 2,
 	"services": [
@@ -26,8 +26,8 @@
 						"READ",
 						"WRITE"
 					],
-					"defaultValue": "0100",
-					"value": "1",
+					"defaultValue": "0000",
+					"value": "0",
 					"length": 2
 				},
 				{
@@ -37,8 +37,8 @@
 					"operations": [
 						"READ"
 					],
-					"defaultValue": "0000000000000000",
-					"value": "0",
+					"defaultValue": "0001000000000000",
+					"value": "256",
 					"length": 8
 				},
 				{
@@ -58,8 +58,8 @@
 					"operations": [
 						"READ"
 					],
-					"defaultValue": "4500000000000000",
-					"value": "69",
+					"defaultValue": "4501000000000000",
+					"value": "325",
 					"length": 8
 				},
 				{
@@ -239,7 +239,8 @@
 					"dataType": "SINT8",
 					"semanticType": "MCU Interface",
 					"operations": [
-						"READ"
+						"READ",
+						"MCU"
 					],
 					"defaultValue": "01",
 					"value": "1",
@@ -248,5 +249,5 @@
 			]
 		}
 	],
-	"createdTimestamp": 1522376670595
+	"createdTimestamp": 1546463512348
 }

@@ -1,5 +1,5 @@
 {
-	"deviceDescriptionId": "b585e33e-7da9-4c37-8da9-a895a33a88ac",
+	"deviceDescriptionId": "0548dcc6-9c37-4965-b5ae-8adcc37410e0",
 	"partnerId": "1da7b817-882e-4074-91b2-ca57255ace0a",
 	"schemaVersion": 2,
 	"services": [
@@ -93,7 +93,7 @@
 				{
 					"id": 2006,
 					"dataType": "SINT64",
-					"semanticType": "WiFi Version",
+					"semanticType": "Wi-Fi Version",
 					"operations": [
 						"READ"
 					],
@@ -186,7 +186,7 @@
 				{
 					"id": 65005,
 					"dataType": "SINT8",
-					"semanticType": "WiFi Bars",
+					"semanticType": "Wi-Fi Bars",
 					"operations": [
 						"READ"
 					],
@@ -197,7 +197,7 @@
 				{
 					"id": 65006,
 					"dataType": "SINT8",
-					"semanticType": "WiFi Steady State",
+					"semanticType": "Wi-Fi Steady State",
 					"operations": [
 						"READ"
 					],
@@ -208,7 +208,7 @@
 				{
 					"id": 65007,
 					"dataType": "SINT8",
-					"semanticType": "WiFi Setup State",
+					"semanticType": "Wi-Fi Setup State",
 					"operations": [
 						"READ",
 						"MCU"
@@ -220,7 +220,7 @@
 				{
 					"id": 65009,
 					"dataType": "BYTES",
-					"semanticType": "WiFi SSID List",
+					"semanticType": "Wi-Fi SSID List",
 					"operations": [
 						"READ",
 						"WRITE",
@@ -233,7 +233,7 @@
 				{
 					"id": 65010,
 					"dataType": "BYTES",
-					"semanticType": "WiFi Credentials",
+					"semanticType": "Wi-Fi Credentials",
 					"operations": [
 						"READ",
 						"WRITE",
@@ -369,5 +369,5 @@
 			]
 		}
 	],
-	"createdTimestamp": 1532632994077
+	"createdTimestamp": 1546548129197
 }

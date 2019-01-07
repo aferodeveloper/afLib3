@@ -1,112 +1,104 @@
 {
+	"deviceDescriptionId": "ba6a0cce-d948-4061-a1cc-ead489c21bac",
+	"partnerId": "1da7b817-882e-4074-91b2-ca57255ace0a",
 	"schemaVersion": 2,
-	"deviceDescriptionId": "",
-	"partnerId": "",
-	"createdTimestamp": 1532632937527,
 	"services": [
 		{
 			"id": 1,
 			"attributes": [
 				{
 					"id": 1024,
-					"semanticType": "LED",
 					"dataType": "SINT16",
-					"length": 2,
+					"semanticType": "LED",
 					"operations": [
 						"READ",
 						"WRITE"
 					],
-					"value": "0"
+					"defaultValue": "0000",
+					"value": "0",
+					"length": 2
 				},
 				{
 					"id": 1025,
-					"semanticType": "GPIO 0 Configuration",
 					"dataType": "SINT64",
-					"length": 8,
+					"semanticType": "GPIO 0 Configuration",
 					"operations": [
 						"READ"
 					],
-					"value": "256"
+					"defaultValue": "0001000000000000",
+					"value": "256",
+					"length": 8
 				},
 				{
 					"id": 1030,
-					"semanticType": "Button",
 					"dataType": "SINT16",
-					"length": 2,
+					"semanticType": "Button",
 					"operations": [
 						"READ"
 					],
+					"length": 2,
 					"value": null
 				},
 				{
 					"id": 1031,
-					"semanticType": "GPIO 3 Configuration",
 					"dataType": "SINT64",
-					"length": 8,
+					"semanticType": "GPIO 3 Configuration",
 					"operations": [
 						"READ"
 					],
-					"value": "325"
+					"defaultValue": "4501000000000000",
+					"value": "325",
+					"length": 8
 				},
 				{
 					"id": 1201,
-					"semanticType": "UTC Time",
 					"dataType": "SINT32",
+					"semanticType": "UTC Time",
 					"operations": [
 						"READ"
 					],
-					"value": null,
-					"length": 4
+					"length": 4,
+					"value": null
 				},
 				{
 					"id": 2001,
-					"semanticType": "Bootloader Version",
 					"dataType": "SINT64",
+					"semanticType": "Bootloader Version",
 					"operations": [
 						"READ"
 					],
-					"value": null,
-					"length": 8
+					"length": 8,
+					"value": null
 				},
 				{
 					"id": 2002,
-					"semanticType": "Softdevice Version",
 					"dataType": "SINT64",
+					"semanticType": "Softdevice Version",
 					"operations": [
 						"READ"
 					],
-					"value": null,
-					"length": 8
+					"length": 8,
+					"value": null
 				},
 				{
 					"id": 2003,
-					"semanticType": "Application Version",
 					"dataType": "SINT64",
+					"semanticType": "Application Version",
 					"operations": [
 						"READ"
 					],
-					"value": null,
-					"length": 8
+					"length": 8,
+					"value": null
 				},
 				{
 					"id": 2004,
-					"semanticType": "Profile Version",
 					"dataType": "SINT64",
+					"semanticType": "Profile Version",
 					"operations": [
 						"READ"
 					],
-					"value": null,
-					"length": 8
-				},
-				{
-					"id": 65000,
-					"semanticType": "MCU UART Config",
-					"dataType": "BYTES",
-					"operations": [
-						"READ"
-					],
-					"value": "03030000",
-					"length": 4
+					"length": 8,
+					"value": null
 				},
 				{
 					"id": 65001,
@@ -116,8 +108,8 @@
 						"READ",
 						"WRITE"
 					],
-					"value": null,
-					"length": 8
+					"length": 8,
+					"value": null
 				},
 				{
 					"id": 65002,
@@ -128,6 +120,7 @@
 						"WRITE",
 						"MCU"
 					],
+					"defaultValue": "803A0900",
 					"value": "604800",
 					"length": 4
 				},
@@ -139,116 +132,120 @@
 						"WRITE",
 						"MCU"
 					],
-					"value": null,
-					"length": 4
+					"length": 4,
+					"value": null
 				},
 				{
 					"id": 65012,
-					"semanticType": "Command",
 					"dataType": "SINT32",
+					"semanticType": "Command",
 					"operations": [
 						"WRITE"
 					],
-					"value": null,
-					"length": 4
+					"length": 4,
+					"value": null
 				},
 				{
 					"id": 65013,
-					"semanticType": "ASR State",
 					"dataType": "SINT8",
+					"semanticType": "ASR State",
 					"operations": [
 						"READ"
 					],
-					"value": null,
-					"length": 1
+					"length": 1,
+					"value": null
 				},
 				{
 					"id": 65014,
-					"semanticType": "Low Power Warn",
 					"dataType": "SINT8",
+					"semanticType": "Low Power Warn",
 					"operations": [
 						"READ"
 					],
-					"value": null,
-					"length": 1
+					"length": 1,
+					"value": null
 				},
 				{
 					"id": 65015,
-					"semanticType": "Linked Timestamp",
 					"dataType": "SINT32",
+					"semanticType": "Linked Timestamp",
 					"operations": [
 						"WRITE"
 					],
-					"value": null,
-					"length": 4
+					"length": 4,
+					"value": null
 				},
 				{
 					"id": 65016,
-					"semanticType": "Advertising Secret Duration",
 					"dataType": "SINT8",
+					"semanticType": "Advertising Secret Duration",
 					"operations": [
 						"READ",
 						"WRITE",
 						"MCU"
 					],
+					"defaultValue": "05",
 					"value": "5",
 					"length": 1
 				},
 				{
 					"id": 65017,
-					"semanticType": "Advertising Secret",
 					"dataType": "BYTES",
+					"semanticType": "Advertising Secret",
 					"operations": [
 						"READ",
 						"MCU"
 					],
-					"value": null,
-					"length": 32
+					"length": 32,
+					"value": null
 				},
 				{
 					"id": 65018,
-					"semanticType": "Attribute ACK",
 					"dataType": "SINT16",
+					"semanticType": "Attribute ACK",
 					"operations": [
 						"WRITE",
 						"MCU"
 					],
-					"value": null,
-					"length": 2
+					"length": 2,
+					"value": null
 				},
 				{
 					"id": 65019,
-					"semanticType": "Reboot Reason",
 					"dataType": "UTF8S",
+					"semanticType": "Reboot Reason",
 					"operations": [
 						"READ"
 					],
-					"value": null,
-					"length": 100
+					"length": 100,
+					"value": null
 				},
 				{
 					"id": 65020,
-					"semanticType": "BLE Comms",
 					"dataType": "BYTES",
+					"semanticType": "BLE Comms",
 					"operations": [
 						"READ",
 						"MCU"
 					],
+					"defaultValue": "FA000000180018000C00A00F",
 					"value": "FA000000180018000C00A00F",
 					"length": 12
 				},
 				{
 					"id": 65021,
-					"semanticType": "MCU Interface",
 					"dataType": "SINT8",
+					"semanticType": "MCU Interface",
 					"operations": [
 						"READ",
 						"MCU"
 					],
+					"defaultValue": "01",
 					"value": "1",
 					"length": 1
 				}
 			]
 		}
-	]
+	],
+	"createdTimestamp": 1546549291063
 }

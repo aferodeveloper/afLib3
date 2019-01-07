@@ -44,6 +44,7 @@
  */
 #define MIN_TIME_BETWEEN_UPDATES_MILLIS (0)
 
+#define MAX_COMMAND_RESULT_TIME_MILLIS          10000
 
 #define ATTRIBUTE_ID_MCU_START                  0x0001   // 1
 #define ATTRIBUTE_ID_MCU_END                    0x03ff   // 1023
@@ -124,11 +125,12 @@ struct af_lib_t {
     uint8_t asr_capability_length;
 
     bool asr_rebooting;
+    long attr_set_request_time;
+
+    long last_command_send_time;
 };
 
 AF_QUEUE_DECLARE(s_request_queue, sizeof(request_t), AF_LIB_REQUEST_QUEUE_SIZE);
-
-static af_lib_t *s_af_lib = NULL;
 
 /****************************************************************************
  *                              Queue Methods                               *
@@ -160,11 +162,16 @@ static void queue_init(af_lib_t *af_lib) {
  */
 static af_lib_error_t queue_put(af_lib_t *af_lib, uint8_t message_type, uint8_t request_id, uint16_t attribute_id, uint16_t value_len, const uint8_t *value, const uint8_t status, const uint8_t reason) {
     queue_t volatile *p_q = &s_request_queue;
-    request_t *p_event = (request_t *)AF_QUEUE_ELEM_ALLOC_FROM_INTERRUPT(p_q);
 
     if (af_lib->asr_rebooting) {
         return AF_ERROR_ASR_REBOOTING;
     }
+    // We need to make sure we leave at least one spot in our queue to handle the response from a server set
+    if (af_lib->state != STATE_WAITING_FOR_SET_RESPONSE && AF_QUEUE_GET_NUM_AVAILABLE(p_q) <= 1) {
+        return AF_ERROR_QUEUE_OVERFLOW; // We're basically "full" now
+    }
+
+    request_t *p_event = (request_t *)AF_QUEUE_ELEM_ALLOC_FROM_INTERRUPT(p_q);
 
     if (p_event != NULL) {
         uint16_t orig_attribute_id = attribute_id;
@@ -265,13 +272,10 @@ static void af_lib_send_command(af_lib_t *af_lib) {
     if (0 == af_lib->interrupts_pending && STATE_IDLE == af_lib->state) {
         af_lib_update_ints_pending(af_lib, 1);
     }
+    af_lib->last_command_send_time = af_utils_millis();
 }
 
 static int af_lib_set_attribute_complete(af_lib_t *af_lib, uint8_t request_id, const uint16_t attr_id, const uint16_t value_len, const uint8_t *value, uint8_t status, uint8_t reason) {
-    if (value == NULL) {
-        return AF_ERROR_INVALID_PARAM;
-    }
-
     return queue_put(af_lib, MSG_TYPE_UPDATE, request_id, attr_id, value_len, value, status, reason);
 }
 
@@ -483,7 +487,7 @@ static void af_lib_on_state_sync(af_lib_t *af_lib) {
 
     af_status_command_set_ack(&af_lib->tx_status, false);
     af_status_command_set_bytes_to_send(&af_lib->tx_status, af_lib->bytes_to_send);
-    af_status_command_set_bytes_to_recv(&af_lib->rx_status, 0);
+    af_status_command_set_bytes_to_recv(&af_lib->tx_status, 0);
 
     result = af_transport_exchange_status(af_lib->the_transport, &af_lib->tx_status, &af_lib->rx_status);
 
@@ -666,6 +670,7 @@ static void af_lib_on_state_cmd_complete(af_lib_t *af_lib) {
             case MSG_TYPE_SET:
                 if (af_lib->event_handler != NULL) {
                     af_lib->state = STATE_WAITING_FOR_SET_RESPONSE;
+                    af_lib->attr_set_request_time = af_utils_millis();
                     af_lib->event_handler(AF_LIB_EVENT_MCU_SET_REQUEST, AF_SUCCESS, af_command_get_attr_id(af_lib->read_cmd), af_command_get_value_len(af_lib->read_cmd), val);
                 } else {
                     if (af_lib->attr_set_handler(af_command_get_req_id(af_lib->read_cmd), af_command_get_attr_id(af_lib->read_cmd), af_command_get_value_len(af_lib->read_cmd), val)) {
@@ -675,10 +680,12 @@ static void af_lib_on_state_cmd_complete(af_lib_t *af_lib) {
                         state = UPDATE_STATE_FAILED;
                         reason = UPDATE_REASON_INTERNAL_SET_REJECTED;
                     }
+                    af_lib->state = STATE_WAITING_FOR_SET_RESPONSE;
                     result = af_lib_set_attribute_complete(af_lib, af_command_get_req_id(af_lib->read_cmd), af_command_get_attr_id(af_lib->read_cmd), af_command_get_value_len(af_lib->read_cmd), val, state, reason);
                     if (result != AF_SUCCESS) {
                         af_logger_println_buffer("Can't reply to SET! This is FATAL!");
                     }
+                    af_lib->state = STATE_IDLE;
                 }
                 break;
 
@@ -765,6 +772,29 @@ static void af_lib_on_state_cmd_complete(af_lib_t *af_lib) {
     }
 }
 
+/**
+ * af_lib_on_state_waiting_for_set_response
+ *
+ * See if we've detected a possible MCU logic bug wherein they've yet to call the af_lib_send_set_response() to a server set request in the allotted time.  If so tell them and unclear the blockage so we can proceed.
+ */
+static void af_lib_on_state_waiting_for_set_response(af_lib_t *af_lib) {
+    if (af_utils_millis() - af_lib->attr_set_request_time > AF_LIB_SET_RESPONSE_TIMEOUT_SECONDS*1000) {
+        af_logger_print_buffer("Response timeout for attribute ");
+        af_logger_print_value(af_command_get_attr_id(af_lib->read_cmd));
+        af_logger_print_buffer(", timeout ");
+        af_logger_print_value(AF_LIB_SET_RESPONSE_TIMEOUT_SECONDS);
+        af_logger_println_buffer(" seconds");
+
+        // We've detected a possible error in the MCU code and to keep us from doing nothing forever we'll respond on the MCU's behalf and also tell them that this situation occurred
+        af_lib->event_handler(AF_LIB_EVENT_MCU_SET_REQUEST_RESPONSE_TIMEOUT, AF_ERROR_TIMEOUT, af_command_get_attr_id(af_lib->read_cmd), af_command_get_value_len(af_lib->read_cmd), af_command_get_value_pointer(af_lib->read_cmd));
+
+        // The MCU code might have responded to our above "kick" and called the appropriate function - so we gotta double check to make sure we still need to
+        if (af_lib->read_cmd != NULL) {
+            af_lib_send_set_response(af_lib, af_command_get_attr_id(af_lib->read_cmd), false, af_command_get_value_len(af_lib->read_cmd), af_command_get_value_pointer(af_lib->read_cmd));
+        }
+    }
+}
+
 
 /**
  * af_lib_run_state_machine
@@ -807,7 +837,8 @@ static void af_lib_run_state_machine(af_lib_t *af_lib) {
                 break;
 
             case STATE_WAITING_FOR_SET_RESPONSE:
-                break; // No-op
+                af_lib_on_state_waiting_for_set_response(af_lib);
+                break;
         }
 
         af_lib_update_ints_pending(af_lib, -1);
@@ -849,9 +880,7 @@ af_lib_t* af_lib_create(attr_set_handler_t attr_set, attr_notify_handler_t attr_
     af_lib->attr_notify_handler = attr_notify;
     af_lib->asr_capability = NULL;
     af_lib->asr_capability_length = 0;
-    af_lib->asr_rebooting = false;
-
-    s_af_lib = af_lib;
+    af_lib->asr_rebooting = true;
 
     return af_lib;
 }
@@ -861,7 +890,6 @@ void af_lib_destroy(af_lib_t* af_lib) {
     af_status_command_cleanup(&af_lib->rx_status);
     free(af_lib->asr_capability);
     free(af_lib);
-    s_af_lib = NULL;
 }
 
 /**
@@ -954,19 +982,11 @@ af_lib_error_t af_lib_set_attribute_64(af_lib_t *af_lib, const uint16_t attr_id,
 }
 
 af_lib_error_t af_lib_set_attribute_str(af_lib_t *af_lib, const uint16_t attr_id, const uint16_t value_len, const char *value) {
-    if (value == NULL) {
-        return AF_ERROR_INVALID_PARAM;
-    }
-
     af_lib->request_id++;
     return queue_put(af_lib, IS_ATTRIBUTE_MCU(attr_id) ? MSG_TYPE_UPDATE : MSG_TYPE_SET, af_lib->request_id, attr_id, value_len, (const uint8_t *) value, UPDATE_STATE_UPDATED, UPDATE_REASON_LOCAL_OR_MCU_UPDATE);
 }
 
 af_lib_error_t af_lib_set_attribute_bytes(af_lib_t *af_lib, const uint16_t attr_id, const uint16_t value_len, const uint8_t *value) {
-    if (value == NULL) {
-        return AF_ERROR_INVALID_PARAM;
-    }
-
     af_lib->request_id++;
     return queue_put(af_lib, IS_ATTRIBUTE_MCU(attr_id) ? MSG_TYPE_UPDATE : MSG_TYPE_SET, af_lib->request_id, attr_id, value_len, value, UPDATE_STATE_UPDATED, UPDATE_REASON_LOCAL_OR_MCU_UPDATE);
 }
@@ -980,6 +1000,14 @@ bool af_lib_is_idle(af_lib_t *af_lib) {
     if (last_complete != 0 && (af_utils_millis() - last_complete) < MIN_TIME_BETWEEN_UPDATES_MILLIS) {
         return false;
     }
+    // See if we've waited long enough for the last command to complete
+    if (af_lib->outstanding_set_get_attr_id != 0 && af_utils_millis() - af_lib->last_command_send_time > MAX_COMMAND_RESULT_TIME_MILLIS) {
+        af_logger_print_buffer("af_lib(): last attr command ");
+        af_logger_print_value(af_lib->outstanding_set_get_attr_id);
+        af_logger_println_buffer(" took too long to complete, moving on...");
+        af_lib->outstanding_set_get_attr_id = 0;
+    }
+
     last_complete = 0;
     return 0 == af_lib->interrupts_pending && STATE_IDLE == af_lib->state && 0 == af_lib->outstanding_set_get_attr_id;
 }
@@ -997,24 +1025,24 @@ void af_lib_mcu_isr(af_lib_t *af_lib) {
     af_lib_update_ints_pending(af_lib, 1);
 }
 
-af_lib_error_t af_lib_asr_has_capability(uint32_t af_asr_capability) {
+af_lib_error_t af_lib_asr_has_capability(af_lib_t *af_lib, uint32_t af_asr_capability) {
     uint8_t byte_index = af_asr_capability / 8;
     uint8_t byte_bit_index = af_asr_capability % 8;
     bool supported;
 
-    if (NULL == s_af_lib) {
+    if (NULL == af_lib) {
         return AF_ERROR_NOT_CREATED;
     }
 
-    if (NULL == s_af_lib->asr_capability) {
+    if (NULL == af_lib->asr_capability) {
         return AF_ERROR_BUSY;
     }
 
-    if (byte_index > s_af_lib->asr_capability_length) {
+    if (byte_index > af_lib->asr_capability_length) {
         return AF_ERROR_NOT_SUPPORTED;
     }
 
-    supported = s_af_lib->asr_capability[byte_index] & (1 << (7 - byte_bit_index));
+    supported = af_lib->asr_capability[byte_index] & (1 << (7 - byte_bit_index));
     return supported ? AF_SUCCESS : AF_ERROR_NOT_SUPPORTED;
 }
 
@@ -1035,18 +1063,17 @@ af_lib_t *af_lib_create_with_unified_callback(af_lib_event_callback_t event_cb, 
     af_lib->event_handler = event_cb;
     af_lib->asr_capability = NULL;
     af_lib->asr_capability_length = 0;
-
-    s_af_lib = af_lib;
+    af_lib->asr_rebooting = true;
 
     return af_lib;
 }
 
-af_lib_error_t af_lib_send_set_response(const uint16_t attribute_id, bool set_succeeded, const uint16_t value_len, const uint8_t *value) {
+af_lib_error_t af_lib_send_set_response(af_lib_t *af_lib, const uint16_t attribute_id, bool set_succeeded, const uint16_t value_len, const uint8_t *value) {
     uint8_t state;
     uint8_t reason;
     af_lib_error_t result;
 
-    if (NULL == s_af_lib->read_cmd || af_command_get_attr_id(s_af_lib->read_cmd) != attribute_id) {
+    if (NULL == af_lib->read_cmd || af_command_get_attr_id(af_lib->read_cmd) != attribute_id) {
         return AF_ERROR_INVALID_PARAM;
     }
 
@@ -1057,17 +1084,18 @@ af_lib_error_t af_lib_send_set_response(const uint16_t attribute_id, bool set_su
         state = UPDATE_STATE_FAILED;
         reason = UPDATE_REASON_INTERNAL_SET_REJECTED;
     }
-    result = af_lib_set_attribute_complete(s_af_lib, af_command_get_req_id(s_af_lib->read_cmd), af_command_get_attr_id(s_af_lib->read_cmd), value_len, value, state, reason);
+    result = af_lib_set_attribute_complete(af_lib, af_command_get_req_id(af_lib->read_cmd), af_command_get_attr_id(af_lib->read_cmd), value_len, value, state, reason);
     if (result != AF_SUCCESS) {
         af_logger_println_buffer("Can't reply to SET! This is FATAL!");
+        return result;
     }
 
-    af_command_cleanup(s_af_lib->read_cmd);
-    free(s_af_lib->read_cmd);
-    s_af_lib->read_cmd_offset = 0;
-    s_af_lib->read_cmd = NULL;
+    af_command_cleanup(af_lib->read_cmd);
+    free(af_lib->read_cmd);
+    af_lib->read_cmd_offset = 0;
+    af_lib->read_cmd = NULL;
 
-    s_af_lib->state = STATE_IDLE;
+    af_lib->state = STATE_IDLE;
 
     return result;
 }

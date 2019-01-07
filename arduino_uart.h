@@ -20,7 +20,7 @@
 #include "af_transport.h"
 
 // You shouldn't call this directly but instead use the arduino_transport_create_uart call
-af_transport_t* arduino_uart_create(uint8_t rxPin, uint8_t txPin);
+af_transport_t* arduino_uart_create(uint8_t rxPin, uint8_t txPin, uint32_t baud_rate);
 
 void af_transport_check_for_interrupt_uart(af_transport_t *af_transport, volatile int *interrupts_pending, bool idle);
 int af_transport_exchange_status_uart(af_transport_t *af_transport, af_status_command_t *af_status_command_tx, af_status_command_t *af_status_command_rx);

@@ -24,11 +24,10 @@
 
 #define INT_CHAR                            0x32
 #define MAX_WAIT_TIME                       1000
-#define BAUD_RATE                           9600
 
 class ArduinoUART {
 public:
-    ArduinoUART(uint8_t rxPin, uint8_t txPin);
+    ArduinoUART(uint8_t rxPin, uint8_t txPin, uint32_t baud_rate);
 
     void checkForInterrupt(volatile int *interrupts_pending, bool idle);
     int exchangeStatus(af_status_command_t *tx, af_status_command_t *rx);
@@ -52,9 +51,9 @@ struct af_transport_t {
     ArduinoUART *arduinoUART;
 };
 
-af_transport_t* arduino_uart_create(uint8_t rxPin, uint8_t txPin) {
+af_transport_t* arduino_uart_create(uint8_t rxPin, uint8_t txPin, uint32_t baud_rate) {
     af_transport_t* result = new af_transport_t();
-    result->arduinoUART = new ArduinoUART(rxPin, txPin);
+    result->arduinoUART = new ArduinoUART(rxPin, txPin, baud_rate);
     return result;
 }
 
@@ -83,13 +82,13 @@ int af_transport_recv_bytes_offset_uart(af_transport_t *af_transport, uint8_t **
     return af_transport->arduinoUART->recvBytesOffset(bytes, bytes_len, bytes_to_recv, offset);
 }
 
-ArduinoUART::ArduinoUART(uint8_t rxPin, uint8_t txPin)
+ArduinoUART::ArduinoUART(uint8_t rxPin, uint8_t txPin, uint32_t baud_rate)
 {
     pinMode(rxPin, INPUT);
     pinMode(txPin, OUTPUT);
 
     _uart = new SoftwareSerial(rxPin, txPin);
-    _uart->begin(BAUD_RATE);
+    _uart->begin(baud_rate);
 }
 
 int ArduinoUART::available()

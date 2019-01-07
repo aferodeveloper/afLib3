@@ -1,6 +1,6 @@
 /*
  * Afero Device Profile header file
- * Device Description:		
+ * Device Description:		ba6a0cce-d948-4061-a1cc-ead489c21bac
  * Schema Version:	2
  */
 
@@ -68,11 +68,6 @@
 #define AF_PROFILE_VERSION                                      2004
 #define AF_PROFILE_VERSION_SZ                                      8
 #define AF_PROFILE_VERSION_TYPE                ATTRIBUTE_TYPE_SINT64
-
-// Attribute MCU UART Config
-#define AF_SYSTEM_MCU_UART_CONFIG                              65000
-#define AF_SYSTEM_MCU_UART_CONFIG_SZ                               4
-#define AF_SYSTEM_MCU_UART_CONFIG_TYPE          ATTRIBUTE_TYPE_BYTES
 
 // Attribute UTC Offset Data
 #define AF_SYSTEM_UTC_OFFSET_DATA                              65001

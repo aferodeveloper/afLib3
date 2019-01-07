@@ -1,13 +1,13 @@
 {
-	"deviceTypeId": "67631b8e-e05f-4984-9564-3e906643571e",
-	"partnerId": "1da7b817-882e-4074-91b2-ca57255ace0a",
 	"name": "Afero Clock",
 	"description": "This profile is used the in afero_clock Arduino example application. The example application only reads system attributes, so no user attributes are defined here other than enabling MCU support and enabling ASR_UTC_TIME in the MCU Configuration.",
 	"createdTimestamp": 1532632993601,
 	"updatedTimestamp": 1532632993601,
+	"deviceTypeId": "67631b8e-e05f-4984-9564-3e906643571e",
+	"partnerId": "",
+	"disconnectNotificationLevel": "LOW",
 	"virtual": false,
 	"deviceTags": [],
-	"disconnectNotificationLevel": "LOW",
 	"moduleConfiguration": {
 		"id": "c7168904-abd3-4dc4-975c-038a03457b0c",
 		"name": "Modulo-2",
@@ -23,6 +23,5 @@
 		"developmentTarget": true,
 		"createdTimestampMs": 1497547254457,
 		"updatedTimestampMs": 1497547254457
-	},
-	"messageRouter": false
+	}
 }

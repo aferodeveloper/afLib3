@@ -57,6 +57,14 @@ typedef enum {
 #define AF_LIB_REQUEST_QUEUE_SIZE                  10
 #endif
 
+/*
+ * Modify this time to be large enough to handle the maximum time that should be given to a MCU set request from the server.
+ * After this time has elapsed a AF_LIB_EVENT_MCU_SET_REQUEST_RESPONSE_TIMEOUT event will be triggered.
+ */
+#ifndef AF_LIB_SET_RESPONSE_TIMEOUT_SECONDS
+#define AF_LIB_SET_RESPONSE_TIMEOUT_SECONDS     60
+#endif
+
 typedef bool (*attr_set_handler_t)(const uint8_t request_id, const uint16_t attribute_id, const uint16_t value_len, const uint8_t *value);
 typedef void (*attr_notify_handler_t)(const uint8_t request_id, const uint16_t attribute_id, const uint16_t value_len, const uint8_t *value);
 
@@ -164,13 +172,14 @@ void af_lib_mcu_isr(af_lib_t *af_lib);
  * capability to afLib, if this function is called too early it will return the AF_ERROR_BUSY error code in which case it should be tried again
  * "at a later time" - ie. once the attribute is present in the AF_LIB_EVENT_ASR_GET_RESPONSE event.
  *
+ * @param af_lib                - an instance of af_lib_t
  * @param af_asr_capability     - a given capability to test
  *
  * @return AF_SUCCESS             - afLib has the capability
  * @return AF_ERROR_NOT_SUPPORTED - afLib does not have the capability
  * @return AF_ERROR_BUSY          - afLib doesn't have the information from ASR yet so you need to try again at a later time
  */
-af_lib_error_t af_lib_asr_has_capability(uint32_t af_asr_capability);
+af_lib_error_t af_lib_asr_has_capability(af_lib_t *af_lib, uint32_t af_asr_capability);
 
 typedef enum {
     AF_LIB_EVENT_UNKNOWN = 0,              // Useful for catching bugs
@@ -181,6 +190,9 @@ typedef enum {
     AF_LIB_EVENT_MCU_DEFAULT_NOTIFICATION, // Unsolicited default notification for an MCU attribute
     AF_LIB_EVENT_ASR_NOTIFICATION,         // Unsolicited notification of non-MCU attribute change
     AF_LIB_EVENT_MCU_SET_REQUEST,          // Request from ASR to MCU to set an MCU attribute, requires a call to af_lib_send_set_response()
+    AF_LIB_EVENT_MCU_SET_REQUEST_RESPONSE_TIMEOUT,  // The af_lib_send_set_response() has not been called from a previous AF_LIB_EVENT_MCU_SET_REQUEST event in the AF_LIB_SET_RESPONSE_TIMEOUT_SECONDS time.
+                                                    // This either indicates that the AF_LIB_SET_RESPONSE_TIMEOUT_SECONDS time is too short for some attribute set operations or there's a logic error on the MCU and a bug that should be fixed.
+                                                    // In addition to being informational, afLib will inform the server that the last set for this attribute has failed.
     AF_LIB_EVENT_COMMUNICATION_BREAKDOWN,  // The communication between the MCU and the ASR seems to have stopped, take the appropriate action (ie. rebooting the ASR)
 } af_lib_event_type_t;
 
@@ -201,6 +213,7 @@ af_lib_t *af_lib_create_with_unified_callback(af_lib_event_callback_t event_cb, 
  *
  * Send the status and new value in response to a request by ASR to set an MCU attribute.
  *
+ * @param af_lib        - an instance of af_lib_t
  * @param attribute_id  - the MCU attribute id that was requested to be set
  * @param set_succeeded - whether or not the set was applied successfully or not
  * @param value_len     - the length of the value for this attribute id
@@ -210,7 +223,7 @@ af_lib_t *af_lib_create_with_unified_callback(af_lib_event_callback_t event_cb, 
  * @return AF_ERROR_INVALID_PARAM   - the attribute_id wasn't being set from the ASR
  * @return AF_ERROR_QUEUE_OVERFLOW  - there isn't enough room in the afLib queue to process this request
  */
-af_lib_error_t af_lib_send_set_response(const uint16_t attribute_id, bool set_succeeded, const uint16_t value_len, const uint8_t *value);
+af_lib_error_t af_lib_send_set_response(af_lib_t *af_lib, const uint16_t attribute_id, bool set_succeeded, const uint16_t value_len, const uint8_t *value);
 
 /**
  * af_lib_dump_queue

@@ -30,9 +30,9 @@ af_transport_t* arduino_transport_create_spi(int chipSelect) {
     return arduino_spi_create(chipSelect);
 }
 
-af_transport_t* arduino_transport_create_uart(uint8_t rxPin, uint8_t txPin) {
+af_transport_t* arduino_transport_create_uart(uint8_t rxPin, uint8_t txPin, uint32_t baud_rate) {
     s_transport_type = ARDUINO_TRANSPORT_UART;
-    return arduino_uart_create(rxPin, txPin);
+    return arduino_uart_create(rxPin, txPin, baud_rate);
 }
 
 void arduino_transport_destroy(af_transport_t *af_transport) {

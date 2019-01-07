@@ -1,6 +1,6 @@
 /*
  * Afero Device Profile header file
- * Device Description:		47268272-b611-4af5-8e1b-a4c70e6d9b46
+ * Device Description:		7c287a7e-8a8e-4d24-bb70-9605eaa9e563
  * Schema Version:	2
  */
 
@@ -8,6 +8,9 @@
 #define AF_BOARD_MODULO_2                                          1
 #define AF_BOARD_QUANTA                                            2
 #define AF_BOARD_ABELO_2A                                          3
+#define AF_BOARD_POTENCO                                           4
+#define AF_BOARD_ABELO_2B                                          5
+#define AF_BOARD_MODULO_1B                                         6
 
 #define AF_BOARD                                   AF_BOARD_MODULO_1
 
@@ -18,7 +21,7 @@
 #define ATTRIBUTE_TYPE_BOOLEAN                                     1
 #define ATTRIBUTE_TYPE_UTF8S                                      20
 #define ATTRIBUTE_TYPE_BYTES                                      21
-#define ATTRIBUTE_TYPE_FIXED_16_16                                 6
+#define ATTRIBUTE_TYPE_Q_15_16                                     6
 
 //region Service ID 1
 // Attribute Blink
@@ -96,8 +99,4 @@
 #define AF_SYSTEM_REBOOT_REASON_SZ                               100
 #define AF_SYSTEM_REBOOT_REASON_TYPE            ATTRIBUTE_TYPE_UTF8S
 
-// Attribute MCU Interface
-#define AF_SYSTEM_MCU_INTERFACE                                65021
-#define AF_SYSTEM_MCU_INTERFACE_SZ                                 1
-#define AF_SYSTEM_MCU_INTERFACE_TYPE            ATTRIBUTE_TYPE_SINT8
 //endregion

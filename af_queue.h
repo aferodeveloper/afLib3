@@ -31,6 +31,7 @@ extern "C" {
 #define AF_QUEUE_PEEK_TAIL_FROM_INTERRUPT(p_q) af_queue_peek_tail_from_interrupt((queue_t *)(p_q))
 #define AF_QUEUE_PUT(p_q, p_data) af_queue_put((queue_t *)(p_q), p_data)
 #define AF_QUEUE_PUT_FROM_INTERRUPT(p_q, p_data) af_queue_put_from_interrupt((queue_t *)(p_q), p_data)
+#define AF_QUEUE_GET_NUM_AVAILABLE(p_q) af_queue_get_num_available((queue_t *)(p_q))
 
 typedef struct af_queue_elem_desc_s
 {
@@ -44,6 +45,7 @@ typedef struct queue_s
     af_queue_elem_desc_t *p_head;
     af_queue_elem_desc_t *p_tail;
     af_queue_elem_desc_t *p_free_head;
+    uint32_t num_available;
 } queue_t;
 
 void af_queue_init_system(uint8_t (*p_preemption_disable)(void), void (*p_preemption_enable)(uint8_t is_nested));
@@ -61,6 +63,7 @@ void af_queue_elem_free_from_interrupt(queue_t *p_q, void *p_data);
 void af_queue_put(queue_t *p_q, void *p_data);
 void af_queue_put_from_interrupt(queue_t *p_q, void *p_data);
 void af_queue_dump(queue_t *p_q, void (*p_element_data)(void*));
+uint32_t af_queue_get_num_available(queue_t *p_q);
 
 #ifdef __cplusplus
 } /* end of extern "C" */

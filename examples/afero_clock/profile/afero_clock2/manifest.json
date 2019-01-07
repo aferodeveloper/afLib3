@@ -1,13 +1,13 @@
 {
 	"name": "Afero Clock",
 	"createDate": 1513024646880,
-	"apeVersion": "1.5.3",
+	"apeVersion": "1.6.4",
 	"originalProfileId": "",
-	"latestProfileId": "a02804a5-211f-4f57-87b5-1b9c55faad66",
+	"latestProfileId": "f0467267-3781-423e-887e-a704984a8cfb",
 	"presentationProfileList": [
-		"649ae680-e7b9-4e5f-8e68-6c890520f6f3"
+		"92707707-09b7-4891-a6de-4911edfa822b"
 	],
 	"presentationDirMap": {
-		"649ae680-e7b9-4e5f-8e68-6c890520f6f3": "1512807063162"
+		"92707707-09b7-4891-a6de-4911edfa822b": "1512807063162"
 	}
 }

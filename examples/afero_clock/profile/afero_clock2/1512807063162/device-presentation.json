@@ -2,9 +2,9 @@
 	"active": true,
 	"valid": true,
 	"friendlyName": "Default Presentation",
-	"createdTimestamp": 1532632998468,
-	"deviceProfileId": "a02804a5-211f-4f57-87b5-1b9c55faad66",
-	"presentationId": "649ae680-e7b9-4e5f-8e68-6c890520f6f3",
+	"createdTimestamp": 1546548130487,
+	"deviceProfileId": "f0467267-3781-423e-887e-a704984a8cfb",
+	"presentationId": "92707707-09b7-4891-a6de-4911edfa822b",
 	"presentationDefinition": {
 		"label": "Afero Clock",
 		"attributeOptions": {

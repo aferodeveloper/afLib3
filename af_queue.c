@@ -50,6 +50,7 @@ static af_queue_elem_desc_t *__af_queue_elem_alloc(queue_t *p_q)
         p_desc = p_q->p_free_head;
         p_q->p_free_head = p_desc->p_next_free;
         p_desc->p_next_alloc = NULL;
+        p_q->num_available--;
     }
 
     return p_desc;
@@ -120,6 +121,7 @@ static void __af_queue_elem_free(queue_t *p_q, void *p_data)
     p_tmp_desc = p_q->p_free_head;
     p_q->p_free_head = p_desc;
     p_desc->p_next_free = p_tmp_desc;
+    p_q->num_available++;
 }
 
 static void _af_queue_elem_free(queue_t *p_q, void *p_data, bool interrupt_context)
@@ -221,6 +223,7 @@ void af_queue_init(queue_t *p_q, int elem_size, int max_elem, uint8_t *p_mem)
 
     // string all elements together and onto the null-terminated free list to start
     p_q->p_free_head = (af_queue_elem_desc_t *)p_mem;
+    p_q->num_available = max_elem;
 
     for (i = 0; i < max_elem - 1; ++i) {
         offset = i * (ALIGN_SIZE(sizeof(af_queue_elem_desc_t), 4) + ALIGN_SIZE(elem_size, 4));
@@ -270,4 +273,8 @@ void af_queue_dump(queue_t *p_q, void (*p_element_data)(void*))
         af_logger_println_formatted_value((int)p_elem, AF_LOGGER_HEX);
         p_elem = p_elem->p_next_free;
     }
+}
+
+uint32_t af_queue_get_num_available(queue_t *p_q) {
+    return p_q->num_available;
 }

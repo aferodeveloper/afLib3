@@ -73,6 +73,8 @@
          than +/- 1-2s or so, but it is accurate enough to use this timestamp to provide a time of day if your
          hardware doesn't have RTC support.
 
+   ** Note: ASR_UTC_TIME is not supported on Modulo-1/ASR-1 but is supported on all other Afero modules.
+
 */
 
 
@@ -102,34 +104,51 @@
 // see the afBlink example for suggested UART setup - to keep this code simple
 // we're just going to use the SPI interface accessible through the Uno+Plinto or
 // through the Modulo's Teensyduino compatible pinout.
+
 //  See the afBlink example app for communicating with Modulo over its UART interface.
+// Select the MCU interface to be used. This define must also match
+// the physical hardware pins connecting the MCU and Modulo, and also
+// the MCU Configuration section of the profile loaded on the Modulo
+//     (in the Afero Profile Editor app "Attributes" menu, interface and UART speed)
+#define ARDUINO_USE_SPI                   1
+//#define ARDUINO_USE_UART                  1
 
-#define ARDUINO_USE_SPI 1
-//#define ARDUINO_USE_UART 1
-
-// Serial monitor baud rate
-#define BAUD_RATE                 115200
+// For Modulo-1 UART speed is fixed at 9600
+// For Modulo-2 the UART_BAUD_RATE here must match the UART speed set in Profile Editor
+#define UART_BAUD_RATE            9600
 
 // Automatically detect MCU board type
-#if defined(ARDUINO_AVR_UNO) // using a Plinto shield
-#define INT_PIN                   2
-#define CS_PIN                    10
+#if defined(ARDUINO_AVR_UNO)          // Arduino Uno using an Afero Plinto shield
+#undef RESET                            // On Plinto the ASR RESET line is tied to the Uno RESET line
+// Only needed for SPI
+#define INT_PIN                   2     // Modulo sends an interrupt on this pin to initiate communication
+#define CS_PIN                    10    // Standard SPI chip select line
+// Only needed for UART
+// For Uno and UART you will need to connect the UART pins on the Modulo board to these
+// pins on the Plinto board
+#define RX_PIN                    7     // Connect to Modulo UART_TX
+#define TX_PIN                    8     // Connect to Modulo UART_RX
 
-#define RX_PIN                    7
-#define TX_PIN                    8
+// The Modulo developer boards match the pinout of the Teensyduino 3.2 from www.pjrc.com
+// You can connect the pins below to the same pins on the Modulo for easy connection,
+// or you can put socket headers on the Teensy and the Modulo will plug right on top of the MCU
+// (The Modulo has 8 extra pins that the Teensy doesn't, so it will overhang the MCU a bit)
 
-#elif defined(TEENSYDUINO)
-#define INT_PIN                   14    // Modulo uses this to initiate communication
-#define CS_PIN                    10    // Standard SPI chip select (aka SS)
-#define RESET                     21    // This is used to reboot the Modulo when the Teensy boots
-
+#elif defined(TEENSYDUINO)            // Teensy 3.2 MCU from www.pjrc.com
+#define RESET                     21    // This pin is used to reboot the Modulo when needed
+// Only needed for SPI
+#define INT_PIN                   14    // Modulo sends an interrupt on this pin to initiate communication
+#define CS_PIN                    10    // Standard SPI chip select line
+// Only needed for UART
 #define RX_PIN                    7
 #define TX_PIN                    8
 
 #else
-#error "Sorry, afLib does not support this board"
+#error "Sorry, afLib can not identify this board, define necessary pins in sketch"
 #endif
 
+// Serial monitor baud rate
+#define DEBUG_BAUD_RATE           115200
 
 bool    timestamp_read         = false;
 int32_t linked_timestamp       = 0;
@@ -138,22 +157,13 @@ int16_t utc_offset_next        = 0;
 int32_t utc_offset_change_time = 0;
 int32_t asr_utc_time           = 0;
 
-// Uno boards have insufficient memory to tolerate pretty debug print methods
-// Try a Teensyduino
-#if !defined(ARDUINO_AVR_UNO)
-#define ATTR_PRINT_HEADER_LEN     60
-#define ATTR_PRINT_MAX_VALUE_LEN  512   // Max attribute len is 256 bytes; Each HEX-printed byte is 2 ASCII characters
-#define ATTR_PRINT_BUFFER_LEN     (ATTR_PRINT_HEADER_LEN + ATTR_PRINT_MAX_VALUE_LEN)
-char attr_print_buffer[ATTR_PRINT_BUFFER_LEN];
-# endif
-
+// define an afLib instance and a few booleans so we know the state of the connection to the Afero Cloud
 af_lib_t* af_lib = NULL;
-bool initializationPending = false; // If true, we're waiting on AF_MODULE_STATE_INITIALIZED
-bool rebootPending = false;         // If true, a reboot is needed, e.g. if we received an OTA firmware update.
+bool asrReady = false;          // If false, we're waiting on AF_MODULE_STATE_INITIALIZED, if true, we can communicate with ASR
+bool asrRebootPending = false;  // If true, a reboot is needed, e.g. if we received an OTA firmware or profile update.
 
-
-//   Forward definitions
-void printAttribute(const char* label, const uint16_t attributeId, const uint16_t valueLen, const uint8_t* value);
+//
+void printAttribute(const uint16_t attributeId, const uint16_t valueLen, const uint8_t* value);
 void printTimeString(time_t t);
 
 // Callback executed any time ASR has information for the MCU
@@ -162,31 +172,9 @@ void attrEventCallback(const af_lib_event_type_t eventType,
                        const uint16_t attributeId,
                        const uint16_t valueLen,
                        const uint8_t* value) {
-  printAttribute("attrEventCallback", attributeId, valueLen, value);
+  //printAttribute(attributeId, valueLen, value);
 
   switch (eventType) {
-    case AF_LIB_EVENT_UNKNOWN:
-      break;
-
-    case AF_LIB_EVENT_ASR_SET_RESPONSE:
-      // Response to af_lib_set_attribute() for an ASR attribute
-      break;
-
-    case AF_LIB_EVENT_MCU_SET_REQ_SENT:
-      // Request from af_lib_set_attribute() for an MCU attribute has been sent to ASR
-      break;
-
-    case AF_LIB_EVENT_MCU_SET_REQ_REJECTION:
-      // Request from af_lib_set_attribute() for an MCU attribute was rejected by ASR
-      break;
-
-    case AF_LIB_EVENT_ASR_GET_RESPONSE:
-      // Response to af_lib_get_attribute()
-      break;
-
-    case AF_LIB_EVENT_MCU_DEFAULT_NOTIFICATION:
-      // Unsolicited default notification for an MCU attribute
-      break;
 
     case AF_LIB_EVENT_ASR_NOTIFICATION:
       // Unsolicited notification of non-MCU attribute change
@@ -194,7 +182,7 @@ void attrEventCallback(const af_lib_event_type_t eventType,
         case AF_SYSTEM_LINKED_TIMESTAMP:
           if (!timestamp_read) {
             linked_timestamp = *((int32_t *)value);
-            Serial.print(F("ASR linked at: "));
+            Serial.print("ASR linked at: ");
             printTimeString((time_t)linked_timestamp);
             // TODO: If you have an RTC this would be a good place to set the clock time
           }
@@ -206,14 +194,12 @@ void attrEventCallback(const af_lib_event_type_t eventType,
           // The line below extracts the int32 timestamp from bytes 2-5 of the attribute
           utc_offset_change_time = *((int32_t *)(value + 2));
           if (utc_offset_change_time > 0) {
-            Serial.print(F("Current TZ offset from UTC: "));
+            Serial.print("Current TZ: UTC");
             Serial.print((float)utc_offset_now / 60);
-            Serial.print(F("h, isDST: "));
-            Serial.println(utc_offset_now > utc_offset_next);
-            Serial.print(F("   Next TZ offset from UTC: "));
+            Serial.println("h");
+            Serial.print("Next Offset: UTC");
             Serial.print((float)utc_offset_next / 60);
-            Serial.println(F("h"));
-            Serial.print(F("Time Zone Change at: "));
+            Serial.print("h at ");
             printTimeString((time_t)utc_offset_change_time);
             // TODO: If you have an RTC this would be a good place to set the clock time and/or timezone
           }
@@ -222,22 +208,26 @@ void attrEventCallback(const af_lib_event_type_t eventType,
 
         case AF_UTC_TIME:
           asr_utc_time = *((int32_t *)value);
-          Serial.print(F("ASR UTC Time: "));
+          Serial.print("ASR UTC Time: ");
           printTimeString((time_t)asr_utc_time);
           // TODO: If you have an RTC this would be a good place to set the clock time
           break;
 
         case AF_SYSTEM_ASR_STATE:
-          Serial.print("ASR state: ");
+          Serial.print("ASR state=");
           switch (value[0]) {
             case AF_MODULE_STATE_REBOOTED:
-              Serial.println("Rebooted - Always set MCU attributes after reboot");
-              initializationPending = true;   // Rebooted, so we're not yet initialized
-              timestamp_read = false;
+              Serial.println("Rebooted");
+              asrReady = false;   // Rebooted, so we we can't talk to it yet
               break;
 
             case AF_MODULE_STATE_LINKED:
               Serial.println("Linked");
+              // "Linked" is the final connected state returned by the Modulo-1
+              // all other devices will return an Initialized state below when connection is completed
+#if AF_BOARD == AF_BOARD_MODULO_1
+              asrReady = true;
+#endif
               break;
 
             case AF_MODULE_STATE_UPDATING:
@@ -245,22 +235,17 @@ void attrEventCallback(const af_lib_event_type_t eventType,
               break;
 
             case AF_MODULE_STATE_UPDATE_READY:
-              Serial.println("Update ready - reboot needed");
-              rebootPending = true;
+              Serial.println("Updated, need reboot");
+              asrRebootPending = true;
               break;
 
             case AF_MODULE_STATE_INITIALIZED:
               Serial.println("Initialized");
-              initializationPending = false;
+#if AF_BOARD != AF_BOARD_MODULO_1
+              asrReady = true;
+#endif
               break;
 
-            case AF_MODULE_STATE_RELINKED:
-              Serial.println("Re-linked");
-              break;
-
-            default:
-              Serial.print("Unexpected state - "); Serial.println(value[0]);
-              break;
           }
           break;
 
@@ -269,29 +254,24 @@ void attrEventCallback(const af_lib_event_type_t eventType,
       }
       break;
 
-    case AF_LIB_EVENT_MCU_SET_REQUEST:
-      // Request from ASR to MCU to set an MCU attribute, requires a call to af_lib_send_set_response()
-      break;
 
     default:
       break;
   }
 }
 
-
 void setup() {
-  Serial.begin(BAUD_RATE);
+  Serial.begin(DEBUG_BAUD_RATE);
   // Wait for Serial to come up, or time out after 3 seconds if there's no serial monitor attached
   while (!Serial || millis() < 3000) {
     ;
   }
 
-  Serial.println(F("afLib: Time of Day from Afero Cloud Example"));
+  Serial.println("afLib: Time of Day from Afero Cloud Example");
 
   // The Plinto board automatically connects reset on UNO to reset on Modulo
   // For Teensy, we need to reset manually...
 #if defined(TEENSYDUINO)
-  Serial.println(F("Using Teensy - Resetting Modulo"));
   pinMode(RESET, OUTPUT);
   digitalWrite(RESET, 0);
   delay(250);
@@ -299,8 +279,8 @@ void setup() {
 #endif
 
 
-    // Start the sketch awaiting initialization
-    initializationPending = true;
+  // Start the sketch awaiting initialization
+  asrReady = false;
 
   /**
      Initialize the afLib - this depends on communications protocol used (SPI or UART)
@@ -317,13 +297,13 @@ void setup() {
               arduinoUART - class to handle UART communications.
   */
 
-  Serial.print("Configuring communications...sketch will use ");
+
 #if defined(ARDUINO_USE_UART)
-  Serial.println("UART");
-  af_transport_t *arduinoUART = arduino_transport_create_uart(RX_PIN, TX_PIN);
+  Serial.println("Using UART");
+  af_transport_t *arduinoUART = arduino_transport_create_uart(RX_PIN, TX_PIN, UART_BAUD_RATE);
   af_lib = af_lib_create_with_unified_callback(attrEventCallback, arduinoUART);
 #elif defined(ARDUINO_USE_SPI)
-  Serial.println("SPI");
+  Serial.println("Using SPI");
   af_transport_t* arduinoSPI = arduino_transport_create_spi(CS_PIN);
   af_lib = af_lib_create_with_unified_callback(attrEventCallback, arduinoSPI);
   arduino_spi_setup_interrupts(af_lib, digitalPinToInterrupt(INT_PIN));
@@ -334,31 +314,31 @@ void setup() {
 
 
 void loop() {
-    // We don't actually do anything here in this example, so we just give afLib some time to process
-    // The actual clock functionality all happens in attrEventCallback
-    af_lib_loop(af_lib);
+  // ALWAYS give the afLib state machine time to do its work - avoid blind delay() calls
+  // of any length, instead repeat calls to af_lib_loop() while waiting for whatever it is
+  // you're waiting to happen. Some afLib operations take multiple loop() calls to complete.
+  af_lib_loop(af_lib);
 
-    if (initializationPending) {
-        // If we're awaiting initialization, don't bother checking/setting attributes
-    } else {
+  // Until the ASR is initialized, we shouldn't talk to it, if it's not ready we just exit loop() altogether.
+  if (!asrReady) return;
 
-        // If we were asked to reboot (e.g. after an OTA firmware update), make the call here in loop().
-        // In order to make this fault-tolerant, we'll continue to retry if the command fails.
-        if (rebootPending) {
-            int retVal = af_lib_set_attribute_32(af_lib, AF_SYSTEM_COMMAND, AF_MODULE_COMMAND_REBOOT);
-            rebootPending = (retVal != AF_SUCCESS);
-            if (!rebootPending) {
-                Serial.println("*************************************************************************");
-                Serial.println("REBOOT COMMAND SENT; NOW AWAITING AF_MODULE_STATE_INITIALIZED");
-                initializationPending = true;
-            }
-        }
+  // asrReady == true from here on down
+  // If we were asked to reboot (e.g. after an OTA firmware update), do it now.
+  if (asrRebootPending) {
+    int retVal = af_lib_set_attribute_32(af_lib, AF_SYSTEM_COMMAND, AF_MODULE_COMMAND_REBOOT);
+    // If retVal returns an error, leave asrRebootPending set to try it again next time around
+    asrRebootPending = (retVal != AF_SUCCESS);
+    // if retVal returned success, then we wait for the ASR reboot to happen
+    if (!asrRebootPending) {
+      asrReady = false;
     }
+  }
+
 }
 
 void printTimeString(time_t t) {
 #if defined(ARDUINO_AVR_UNO)
-  // Arduino Uno seems to have trouble with strftime that other larger MCUs don't have.
+  // Arduino Uno seems to have trouble with strftime that other MCUs don't have.
   // So instead of an easy and simple strftime, let's dump the timestamp here to show it's
   // at least correct. Parsing this into a time value is an exercise left to the user
   // (solution hint: use a better MCU than an Uno)
@@ -378,46 +358,39 @@ void printTimeString(time_t t) {
 
 
 
-/****************************************************************************************************
-   Debug Functions
- *                                                                                                  *
-   Some helper functions to make debugging a little easier...
- ****************************************************************************************************/
-#ifdef ATTR_PRINT_BUFFER_LEN
 
-void getPrintAttrHeader(const char *sourceLabel, const char *attrLabel, const uint16_t attributeId, const uint16_t valueLen) {
+
+
+// Debugging Stuff
+
+// Arduino Uno boards have inadequate memory to tolerate pretty-printing debug methods
+// so these are pretty basic just to show program flow.
+// See the "Kitchen Sink" example app in afLib3 for examples of more detailed and useful debugging techniques
+#define ATTR_PRINT_BUFFER_LEN     60
+
+char attr_print_buffer[ATTR_PRINT_BUFFER_LEN];
+
+void getPrintAttrHeader(const char* attrLabel, const uint16_t attributeId,
+                        const uint16_t valueLen) {
   memset(attr_print_buffer, 0, ATTR_PRINT_BUFFER_LEN);
-  snprintf(attr_print_buffer, ATTR_PRINT_BUFFER_LEN, "%s id: %s len: %05d value: ", sourceLabel, attrLabel, valueLen);
+  snprintf(attr_print_buffer, ATTR_PRINT_BUFFER_LEN, "attr %s=", attrLabel);
 }
 
-void printAttrBool(const char *sourceLabel, const char *attrLabel, const uint16_t attributeId, const uint16_t valueLen, const uint8_t *value) {
-  getPrintAttrHeader(sourceLabel, attrLabel, attributeId, valueLen);
-  if (valueLen > 0) {
-    strcat(attr_print_buffer, *value == 1 ? "true" : "false");
-  }
-  Serial.println(attr_print_buffer);
-}
-
-void printAttr8(const char *sourceLabel, const char *attrLabel, const uint8_t attributeId, const uint16_t valueLen, const uint8_t *value) {
-  getPrintAttrHeader(sourceLabel, attrLabel, attributeId, valueLen);
+void
+printAttr16(const char* attrLabel, const uint16_t attributeId, const uint16_t valueLen,
+            const uint8_t* value) {
+  getPrintAttrHeader(attrLabel, attributeId, valueLen);
   if (valueLen > 0) {
     char intStr[6];
-    strcat(attr_print_buffer, itoa(*((int8_t *)value), intStr, 10));
+    strcat(attr_print_buffer, itoa(*((int16_t*) value), intStr, 10));
   }
   Serial.println(attr_print_buffer);
 }
 
-void printAttr16(const char *sourceLabel, const char *attrLabel, const uint16_t attributeId, const uint16_t valueLen, const uint8_t *value) {
-  getPrintAttrHeader(sourceLabel, attrLabel, attributeId, valueLen);
-  if (valueLen > 0) {
-    char intStr[6];
-    strcat(attr_print_buffer, itoa(*((int16_t *)value), intStr, 10));
-  }
-  Serial.println(attr_print_buffer);
-}
-
-void printAttr32(const char *sourceLabel, const char *attrLabel, const uint16_t attributeId, const uint16_t valueLen, const uint8_t *value) {
-  getPrintAttrHeader(sourceLabel, attrLabel, attributeId, valueLen);
+void
+printAttr32(const char* attrLabel, const uint16_t attributeId, const uint16_t valueLen,
+            const uint8_t* value) {
+  getPrintAttrHeader(attrLabel, attributeId, valueLen);
   if (valueLen > 0) {
     char intStr[11];
     strcat(attr_print_buffer, itoa(*((int32_t *)value), intStr, 10));
@@ -425,46 +398,58 @@ void printAttr32(const char *sourceLabel, const char *attrLabel, const uint16_t 
   Serial.println(attr_print_buffer);
 }
 
-void printAttrHex(const char *sourceLabel, const char *attrLabel, const uint16_t attributeId, const uint16_t valueLen, const uint8_t *value) {
-  getPrintAttrHeader(sourceLabel, attrLabel, attributeId, valueLen);
+
+void
+printAttrHex(const char* attrLabel, const uint16_t attributeId, const uint16_t valueLen,
+             const uint8_t* value) {
+  getPrintAttrHeader(attrLabel, attributeId, valueLen);
   for (int i = 0; i < valueLen; i++) {
     strcat(attr_print_buffer, String(value[i], HEX).c_str());
   }
   Serial.println(attr_print_buffer);
 }
 
-void printAttrStr(const char *sourceLabel, const char *attrLabel, const uint16_t attributeId, const uint16_t valueLen, const uint8_t *value) {
-  getPrintAttrHeader(sourceLabel, attrLabel, attributeId, valueLen);
+
+void
+printAttrStr(const char* attrLabel, const uint16_t attributeId, const uint16_t valueLen,
+             const uint8_t* value) {
+  getPrintAttrHeader(attrLabel, attributeId, valueLen);
   int len = strlen(attr_print_buffer);
   for (int i = 0; i < valueLen; i++) {
-    attr_print_buffer[len + i] = (char)value[i];
+    attr_print_buffer[len + i] = (char) value[i];
   }
   Serial.println(attr_print_buffer);
 }
-#endif
 
-void printAttribute(const char *label, const uint16_t attributeId, const uint16_t valueLen, const uint8_t *value) {
-#ifdef ATTR_PRINT_BUFFER_LEN
+void printAttribute(const uint16_t attributeId, const uint16_t valueLen, const uint8_t* value) {
   switch (attributeId) {
     case AF_SYSTEM_LINKED_TIMESTAMP:
-      printAttr32(label, "AF_SYSTEM_LINKED_TIMESTAMP", attributeId, valueLen, value);
+      printAttr32("Linked Timestamp", attributeId, valueLen, value);
       break;
 
     case AF_SYSTEM_UTC_OFFSET_DATA:
-      printAttrHex(label, "AF_SYSTEM_UTC_OFFSET_DATA", attributeId, valueLen, value);
+      printAttrHex("UTC Offset Data", attributeId, valueLen, value);
+      break;
+
+    case AF_UTC_TIME:
+      printAttr32("ASR Timestamp", attributeId, valueLen, value);
       break;
 
     case AF_APPLICATION_VERSION:
-      printAttrHex(label, "AF_APPLICATION_VERSION", attributeId, valueLen, value);
+      printAttr16("FW Version", attributeId, valueLen, value);
       break;
 
-    case AF_SYSTEM_ASR_STATE:
-      printAttr8(label, "AF_SYSTEM_ASR_STATE", attributeId, valueLen, value);
+    case AF_PROFILE_VERSION:
+      printAttr16("Profile Version", attributeId, valueLen, value);
       break;
 
     case AF_SYSTEM_REBOOT_REASON:
-      printAttrStr(label, "AF_REBOOT_REASON", attributeId, valueLen, value);
+      // This attribute can be very long, but the first few characters are all we
+      // generally care about - the Uno is very short on RAM so we don't waste it
+      // and we only dump the first few characters
+      printAttrStr("Reboot Reason", attributeId, 9, value);
       break;
   }
-#endif
 }
+
+

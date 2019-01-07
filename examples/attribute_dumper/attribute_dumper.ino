@@ -45,7 +45,7 @@
 // #include "profile/attribute_dumper1/device-description.h"
 // However, this is all we need out of a profile. defining it here means we don't have to include
 // a device-description.h here and we'll work with anything as long as the profile
-// has an MCU interface set
+// has a compatible MCU interface set
 #if !defined(AF_SYSTEM_COMMAND)
 #define AF_SYSTEM_COMMAND                                        65012
 #endif
@@ -87,13 +87,14 @@ void attrEventCallback(const af_lib_event_type_t eventType,
               initializationPending = true;   // Rebooted, so we're not yet initialized
               break;
 
+            case 1: // AF_MODULE_STATE_LINKED
+              initializationPending = false;
+              break;
+
             case 3: // MODULE_STATE_UPDATE_READY
               rebootPending = true;
               break;
 
-            case 4: // AF_MODULE_STATE_INITIALIZED
-              initializationPending = false;
-              break;
           }
           break;
 
@@ -104,7 +105,7 @@ void attrEventCallback(const af_lib_event_type_t eventType,
     case AF_LIB_EVENT_MCU_SET_REQUEST:
       // Request from ASR to MCU to set an MCU attribute, requires a call to af_lib_send_set_response()
       printAttribute("   set", attributeId, valueLen, value);
-      af_lib_send_set_response(attributeId, true, valueLen, value);
+      af_lib_send_set_response(af_lib, attributeId, true, valueLen, value);
       break;
 
     default:
@@ -119,7 +120,7 @@ void attrEventCallback(const af_lib_event_type_t eventType,
 
 void setup() {
   Serial.begin(BAUD_RATE);
-  while (!Serial && millis() < 4000) {
+  while (!Serial || millis() < 4000) {
     ;
   }
 
@@ -150,7 +151,7 @@ void setup() {
   Serial.print("Configuring communications...sketch will use ");
 #if defined(ARDUINO_USE_UART)
   Serial.println("UART");
-  af_transport_t *arduinoUART = arduino_transport_create_uart(RX_PIN, TX_PIN);
+  af_transport_t *arduinoUART = arduino_transport_create_uart(RX_PIN, TX_PIN, 9600);
   af_lib = af_lib_create_with_unified_callback(attrEventCallback, arduinoUART);
 #elif defined(ARDUINO_USE_SPI)
   Serial.println("SPI");

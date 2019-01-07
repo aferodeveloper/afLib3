@@ -2,12 +2,12 @@
 	"name": "afBlink2",
 	"createDate": 1493828246641,
 	"originalProfileId": "",
-	"latestProfileId": "95fe863b-2f85-424e-b800-e1637aa09ba4",
+	"latestProfileId": "be71b96e-dca4-43e9-bf01-09e5cf6a39a6",
 	"presentationProfileList": [
-		"9d21e70c-b2ee-4c5e-8d57-c67d4dc420d3"
+		"a6dc3144-55d0-4332-90e3-03c508c46a7e"
 	],
 	"presentationDirMap": {
-		"9d21e70c-b2ee-4c5e-8d57-c67d4dc420d3": "a93b2b57-df05-4979-b9d6-75bca43d0aa0"
+		"a6dc3144-55d0-4332-90e3-03c508c46a7e": "a93b2b57-df05-4979-b9d6-75bca43d0aa0"
 	},
-	"apeVersion": "1.3.1"
+	"apeVersion": "1.6.4"
 }

@@ -1,6 +1,6 @@
 /*
  * Afero Device Profile header file
- * Device Description:		214e315d-a10e-4186-9a38-a448c2bde958
+ * Device Description:		
  * Schema Version:	2
  */
 
@@ -8,6 +8,9 @@
 #define AF_BOARD_MODULO_2                                            1
 #define AF_BOARD_QUANTA                                              2
 #define AF_BOARD_ABELO_2A                                            3
+#define AF_BOARD_POTENCO                                             4
+#define AF_BOARD_ABELO_2B                                            5
+#define AF_BOARD_MODULO_1B                                           6
 
 #define AF_BOARD                                     AF_BOARD_MODULO_2
 
@@ -18,7 +21,29 @@
 #define ATTRIBUTE_TYPE_BOOLEAN                                       1
 #define ATTRIBUTE_TYPE_UTF8S                                        20
 #define ATTRIBUTE_TYPE_BYTES                                        21
-#define ATTRIBUTE_TYPE_FIXED_16_16                                   6
+#define ATTRIBUTE_TYPE_Q_15_16                                       6
+
+//region Service ID 0
+// Attribute Device ID
+#define AF_DEVICE_ID                                              1202
+#define AF_DEVICE_ID_SZ                                              8
+#define AF_DEVICE_ID_TYPE                         ATTRIBUTE_TYPE_BYTES
+
+// Attribute Association ID
+#define AF_ASSOCIATION_ID                                         1203
+#define AF_ASSOCIATION_ID_SZ                                        12
+#define AF_ASSOCIATION_ID_TYPE                    ATTRIBUTE_TYPE_BYTES
+
+// Attribute Company Code
+#define AF_COMPANY_CODE                                           1204
+#define AF_COMPANY_CODE_SZ                                           1
+#define AF_COMPANY_CODE_TYPE                      ATTRIBUTE_TYPE_SINT8
+
+// Attribute Online Status
+#define AF_ONLINE_STATUS                                          1205
+#define AF_ONLINE_STATUS_SZ                                          3
+#define AF_ONLINE_STATUS_TYPE                     ATTRIBUTE_TYPE_BYTES
+//endregion
 
 //region Service ID 1
 // Attribute Blink
@@ -61,15 +86,20 @@
 #define AF_PROFILE_VERSION_SZ                                        8
 #define AF_PROFILE_VERSION_TYPE                  ATTRIBUTE_TYPE_SINT64
 
-// Attribute WiFi Version
-#define AF_WIFI_VERSION                                           2006
-#define AF_WIFI_VERSION_SZ                                           8
-#define AF_WIFI_VERSION_TYPE                     ATTRIBUTE_TYPE_SINT64
+// Attribute Wi-Fi Version
+#define AF_WI_FI_VERSION                                          2006
+#define AF_WI_FI_VERSION_SZ                                          8
+#define AF_WI_FI_VERSION_TYPE                    ATTRIBUTE_TYPE_SINT64
 
 // Attribute Offline Schedules Enabled
 #define AF_OFFLINE_SCHEDULES_ENABLED                             59001
 #define AF_OFFLINE_SCHEDULES_ENABLED_SZ                              2
 #define AF_OFFLINE_SCHEDULES_ENABLED_TYPE        ATTRIBUTE_TYPE_SINT16
+
+// Attribute MCU UART Config
+#define AF_SYSTEM_MCU_UART_CONFIG                                65000
+#define AF_SYSTEM_MCU_UART_CONFIG_SZ                                 4
+#define AF_SYSTEM_MCU_UART_CONFIG_TYPE            ATTRIBUTE_TYPE_BYTES
 
 // Attribute UTC Offset Data
 #define AF_SYSTEM_UTC_OFFSET_DATA                                65001
@@ -81,20 +111,20 @@
 #define AF_SYSTEM_CONNECTED_SSID_SZ                                 33
 #define AF_SYSTEM_CONNECTED_SSID_TYPE             ATTRIBUTE_TYPE_UTF8S
 
-// Attribute WiFi Bars
-#define AF_SYSTEM_WIFI_BARS                                      65005
-#define AF_SYSTEM_WIFI_BARS_SZ                                       1
-#define AF_SYSTEM_WIFI_BARS_TYPE                  ATTRIBUTE_TYPE_SINT8
+// Attribute Wi-Fi Bars
+#define AF_SYSTEM_WI_FI_BARS                                     65005
+#define AF_SYSTEM_WI_FI_BARS_SZ                                      1
+#define AF_SYSTEM_WI_FI_BARS_TYPE                 ATTRIBUTE_TYPE_SINT8
 
-// Attribute WiFi Steady State
-#define AF_SYSTEM_WIFI_STEADY_STATE                              65006
-#define AF_SYSTEM_WIFI_STEADY_STATE_SZ                               1
-#define AF_SYSTEM_WIFI_STEADY_STATE_TYPE          ATTRIBUTE_TYPE_SINT8
+// Attribute Wi-Fi Steady State
+#define AF_SYSTEM_WI_FI_STEADY_STATE                             65006
+#define AF_SYSTEM_WI_FI_STEADY_STATE_SZ                              1
+#define AF_SYSTEM_WI_FI_STEADY_STATE_TYPE         ATTRIBUTE_TYPE_SINT8
 
 // Attribute Command
 #define AF_SYSTEM_COMMAND                                        65012
-#define AF_SYSTEM_COMMAND_SZ                                         4
-#define AF_SYSTEM_COMMAND_TYPE                   ATTRIBUTE_TYPE_SINT32
+#define AF_SYSTEM_COMMAND_SZ                                        64
+#define AF_SYSTEM_COMMAND_TYPE                    ATTRIBUTE_TYPE_BYTES
 
 // Attribute ASR State
 #define AF_SYSTEM_ASR_STATE                                      65013
@@ -116,8 +146,8 @@
 #define AF_SYSTEM_REBOOT_REASON_SZ                                 100
 #define AF_SYSTEM_REBOOT_REASON_TYPE              ATTRIBUTE_TYPE_UTF8S
 
-// Attribute MCU Interface
-#define AF_SYSTEM_MCU_INTERFACE                                  65021
-#define AF_SYSTEM_MCU_INTERFACE_SZ                                   1
-#define AF_SYSTEM_MCU_INTERFACE_TYPE              ATTRIBUTE_TYPE_SINT8
+// Attribute Device Capability
+#define AF_SYSTEM_DEVICE_CAPABILITY                              65066
+#define AF_SYSTEM_DEVICE_CAPABILITY_SZ                               8
+#define AF_SYSTEM_DEVICE_CAPABILITY_TYPE          ATTRIBUTE_TYPE_BYTES
 //endregion

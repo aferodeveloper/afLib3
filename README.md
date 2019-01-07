@@ -1,6 +1,6 @@
 # Afero Secure Radio Arduino Library #
 
-**afLib3 Version 1.0**
+**afLib3 Version 1.1**
 
 ## Welcome ##
 
@@ -36,20 +36,14 @@ AfLib3 is packaged as an Arduino-compatible library for ease of installing in th
 
 ### Release Notes ###
 
-afLib3 1.0.305 7/23/18 Release Notes
+afLib3 1.1.306 1/07/19 Release Notes
 
-* New, more logical API.
-* Atmel SAMD21 support (UART only).
-* Linux support for connectivity to ASR-1 and ASR-2 via UART, when used in conjunction with Firmware v2.0 and later
-* Better handling of MCU attributes with default values. These are now differentiated in the callback when they're sent to the MCU.
-* More granular event-handling in callback simplifies usage.
-* MCU OTA support. You can download new firmware for your connected MCU via the Afero Platform.
-Added function af_lib_asr_has_capability() to enable MCU to query the ASR firmware for supported features.
-* New system attributes:
-  AF_ONLINE_STATUS will tell you if ASR is connected to the Afero Cloud.
-  AF_DEVICE_ID enables retrieval of the device ID using af_lib_get_attribute().
-  AF_ASSOCIATION_ID enables retrieval of the association ID using af_lib_get_attribute()).
-* New Module States:
-  AF_MODULE_STATE_INITIALIZED indicates initialization is complete, and it's safe for MCU to call af_lib_set_attribute*().
-  AF_MODULE_STATE_RELINKED can be used to differentiate a link state at reboot from a link state after the device may have dropped offline.
+* changed signatures for af_lib_asr_has_capability() and af_lib_send_set_response() for consistency
+* Added ASR_STATE_RELINKED to indicate when ASR drops offline and reconnects.
+* Greatly simplified afBlink example app.
+* Fixed issue in example apps that caused Modulo-1 to not work properly.
+* Updated example apps for new “MCU update all” behavior in Firmware R2.1.1.
+* Removed reference to undefined RESET pin when using Arduino Uno.
+* Created example app profiles for Modulo-1B.
+* Removed obsolete BoE-bot example apps
 

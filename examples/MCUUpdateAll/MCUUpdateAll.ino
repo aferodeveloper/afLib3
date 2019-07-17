@@ -24,7 +24,12 @@
 #include "arduino_transport.h"
 
 // Include the constants required to access attribute ids from your profile.
-#include "profile/MCUUpdateAll2/device-description.h"
+//#include "profile/mcu_update_all_Modulo-1_SPI/device-description.h"           // For Modulo-1 SPI
+//#include "profile/mcu_update_all_Modulo-1_UART/device-description.h"          // For Modulo-1 UART
+//#include "profile/mcu_update_all_Modulo-1B_SPI/device-description.h"          // For Modulo-1B SPI
+//#include "profile/mcu_update_all_Modulo-1B_UART/device-description.h"         // For Modulo-1B UART
+#include "profile/mcu_update_all_Modulo-2_SPI/device-description.h"           // For Modulo-2 SPI
+//#include "profile/mcu_update_all_Modulo-2_UART/device-description.h"          // For Modulo-2 UART
 
 // Select the MCU interface used (set in the profile, and in hardware)
 //#define ARDUINO_USE_UART                  1

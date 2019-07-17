@@ -36,6 +36,14 @@ AfLib3 is packaged as an Arduino-compatible library for ease of installing in th
 
 ### Release Notes ###
 
+afLib3 1.2.319 7/17/19 Release Notes
+
+* afLib3 support for Modulo-1 was broken and would not talk to a properly connected ASR
+* Renamed example profiles so "device name + device type" are a unique combination (Profile Editor complains if it's not)
+* Profiles for Modulo-1B had LED on GPIO0 as Active Low (it's Active High)
+* Re-added missing LICENSE.txt file
+* Re-added arduino_transport_create_spi(CS_PIN) API inadvertently removed when adding arduino_transport_create_spi(CS_PIN,frame_length)
+
 afLib3 1.1.306 1/07/19 Release Notes
 
 * changed signatures for af_lib_asr_has_capability() and af_lib_send_set_response() for consistency
@@ -45,5 +53,5 @@ afLib3 1.1.306 1/07/19 Release Notes
 * Updated example apps for new “MCU update all” behavior in Firmware R2.1.1.
 * Removed reference to undefined RESET pin when using Arduino Uno.
 * Created example app profiles for Modulo-1B.
-* Removed obsolete BoE-bot example apps
+* Removed obsoleted BoE-Bot example apps
 

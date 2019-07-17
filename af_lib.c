@@ -38,6 +38,14 @@
 #define AFLIB_SYSTEM_COMMAND_REBOOT     (1)
 
 /**
+ * Some afLib features are only supported on newer firmware and newer ASR devices, so check
+ * for older firmware so afLib can cope with different features
+ */
+#define AFLIB_SYSTEM_APPLICATION_VERSION             (2003)
+// ASR_STATE extensions were introduced in this version
+#define AFLIB_SYSTEM_APPLICATION_VERSION_EXTENSIONS  0x5062 // 20578
+
+/**
  * Prevent the MCU from spamming us with too many setAttribute requests.
  * We do this by waiting a small amount of time in between transactions.
  * This prevents sync retries and allows the module to get it's work done.
@@ -78,6 +86,8 @@
 static long last_sync = 0;
 static int sync_retries = 0;
 static long last_complete = 0;
+static uint64_t s_asr_version = 0;
+static uint8_t s_asr_states = 0;
 
 typedef struct {
     uint8_t     message_type;
@@ -646,6 +656,26 @@ static void af_lib_handle_attr_notify(af_lib_t *af_lib, af_command_t *command) {
     }
 }
 
+static void af_lib_asr_initialization_complete(af_lib_t *af_lib) {
+    bool asr_state_extensions = AFLIB_SYSTEM_APPLICATION_VERSION_EXTENSIONS < s_asr_version;
+    uint8_t desired_state = 1 << (asr_state_extensions ? AF_MODULE_STATE_INITIALIZED : AF_MODULE_STATE_LINKED);
+
+    if (s_asr_states & desired_state) {
+        af_logger_println_buffer("ASR finished rebooting");
+        af_lib->asr_rebooting = false;
+
+        // When we start up we need to tell the ASR our capabilities
+        uint8_t our_capability = 0;
+        af_lib_set_attribute_bytes(af_lib, ATTRIBUTE_ID_DEVICE_MCU_AFLIB_CAPABILITIES, sizeof(our_capability), &our_capability);
+
+        // When we start up we need to get the ASR capabilities and cache them internally
+        af_lib_get_attribute(af_lib, AF_ATTRIBUTE_ID_ASR_CAPABILITIES);
+
+        // Clear the variables after we've gotten what we wanted
+        s_asr_version = s_asr_states = 0;
+    }
+}
+
 /**
  * af_lib_on_state_cmd_complete
  *
@@ -683,7 +713,8 @@ static void af_lib_on_state_cmd_complete(af_lib_t *af_lib) {
                     af_lib->state = STATE_WAITING_FOR_SET_RESPONSE;
                     result = af_lib_set_attribute_complete(af_lib, af_command_get_req_id(af_lib->read_cmd), af_command_get_attr_id(af_lib->read_cmd), af_command_get_value_len(af_lib->read_cmd), val, state, reason);
                     if (result != AF_SUCCESS) {
-                        af_logger_println_buffer("Can't reply to SET! This is FATAL!");
+                        af_logger_print_buffer("Can't reply to SET in on_state_cmd_complete! This is FATAL! rc=");
+                        af_logger_println_value(result);
                     }
                     af_lib->state = STATE_IDLE;
                 }
@@ -703,18 +734,20 @@ static void af_lib_on_state_cmd_complete(af_lib_t *af_lib) {
                         af_lib->outstanding_set_get_attr_id = 0;
                     }
 
+                    if (AFLIB_SYSTEM_APPLICATION_VERSION == af_command_get_attr_id(af_lib->read_cmd)) {
+                        s_asr_version = af_utils_read_little_endian_64(af_command_get_value_pointer(af_lib->read_cmd));
+                        if (s_asr_states != 0 && s_asr_version != 0) {
+                            af_lib_asr_initialization_complete(af_lib);
+                        }
+                    }
+
                     if (AF_SYSTEM_ASR_STATE_ATTR_ID == af_command_get_attr_id(af_lib->read_cmd)) {
                         uint8_t *value = (uint8_t*)af_command_get_value_pointer(af_lib->read_cmd);
-                        if (value != NULL && AF_MODULE_STATE_INITIALIZED == value[0]) {
-                            af_logger_println_buffer("ASR finished rebooting");
-                            af_lib->asr_rebooting = false;
-
-                            // When we start up we need to tell the ASR our capabilities
-                            uint8_t our_capability = 0;
-                            af_lib_set_attribute_bytes(af_lib, ATTRIBUTE_ID_DEVICE_MCU_AFLIB_CAPABILITIES, sizeof(our_capability), &our_capability);
-
-                            // When we start up we need to get the ASR capabilities and cache them internally
-                            af_lib_get_attribute(af_lib, AF_ATTRIBUTE_ID_ASR_CAPABILITIES);
+                        if (value != NULL) {
+                            s_asr_states |= (1 << value[0]);
+                            if (s_asr_states != 0 && s_asr_version != 0) {
+                                af_lib_asr_initialization_complete(af_lib);
+                            }
                         }
                     }
 
@@ -1086,7 +1119,8 @@ af_lib_error_t af_lib_send_set_response(af_lib_t *af_lib, const uint16_t attribu
     }
     result = af_lib_set_attribute_complete(af_lib, af_command_get_req_id(af_lib->read_cmd), af_command_get_attr_id(af_lib->read_cmd), value_len, value, state, reason);
     if (result != AF_SUCCESS) {
-        af_logger_println_buffer("Can't reply to SET! This is FATAL!");
+        af_logger_print_buffer("Can't reply to SET in send_set_response! This is FATAL! rc=");
+        af_logger_println_value(result);
         return result;
     }
 

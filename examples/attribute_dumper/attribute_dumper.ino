@@ -42,7 +42,13 @@
 
 // If you want the full effect of debugging MCU attributes as well, you can use one
 // of the example profiles here (or your own)
-// #include "profile/attribute_dumper1/device-description.h"
+//#include "profile/attribute_dumper_Modulo-1_SPI/device-description.h"           // For Modulo-1 SPI
+//#include "profile/attribute_dumper_Modulo-1_UART/device-description.h"          // For Modulo-1 UART
+//#include "profile/attribute_dumper_Modulo-1B_SPI/device-description.h"          // For Modulo-1B SPI
+//#include "profile/attribute_dumper_Modulo-1B_UART/device-description.h"         // For Modulo-1B UART
+//#include "profile/attribute_dumper_Modulo-2_SPI/device-description.h"           // For Modulo-2 SPI
+//#include "profile/attribute_dumper_Modulo-2_UART/device-description.h"          // For Modulo-2 UART
+
 // However, this is all we need out of a profile. defining it here means we don't have to include
 // a device-description.h here and we'll work with anything as long as the profile
 // has a compatible MCU interface set

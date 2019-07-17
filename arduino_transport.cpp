@@ -27,7 +27,13 @@ static arduino_transport_t s_transport_type;
 
 af_transport_t* arduino_transport_create_spi(int chipSelect) {
     s_transport_type = ARDUINO_TRANSPORT_SPI;
-    return arduino_spi_create(chipSelect);
+    return arduino_spi_create(chipSelect, DEFAULT_SPI_FRAME_LEN);
+}
+
+
+af_transport_t* arduino_transport_create_spi(int chipSelect, uint16_t frame_length) {
+    s_transport_type = ARDUINO_TRANSPORT_SPI;
+    return arduino_spi_create(chipSelect, frame_length);
 }
 
 af_transport_t* arduino_transport_create_uart(uint8_t rxPin, uint8_t txPin, uint32_t baud_rate) {

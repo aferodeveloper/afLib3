@@ -24,7 +24,7 @@
 
 
 // You shouldn't call this directly but instead use the arduino_transport_create_spi call
-af_transport_t* arduino_spi_create(int chipSelect);
+af_transport_t* arduino_spi_create(int chipSelect, uint16_t frame_length);
 
 /**
  * Setup the SPI interrupt handling with your instance of afLib

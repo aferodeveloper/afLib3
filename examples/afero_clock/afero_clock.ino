@@ -95,8 +95,13 @@
 // system attributes exist in all profiles created with Profile Editor > 1.2.1
 // as long as the Modulo is flashed with a profile that has MCU support enabled.
 // We have a demo profile here that you can flash to our Modulo if you need one
-//#include "profile/afero_clock1/device-description.h"
-#include "profile/afero_clock2/device-description.h"
+//#include "profile/afero_clock_Modulo-1_SPI/device-description.h"           // For Modulo-1 SPI
+//#include "profile/afero_clock_Modulo-1_UART/device-description.h"          // For Modulo-1 UART
+//#include "profile/afero_clock_Modulo-1B_SPI/device-description.h"          // For Modulo-1B SPI
+//#include "profile/afero_clock_Modulo-1B_UART/device-description.h"         // For Modulo-1B UART
+#include "profile/afero_clock_Modulo-2_SPI/device-description.h"           // For Modulo-2 SPI
+//#include "profile/afero_clock_Modulo-2_UART/device-description.h"          // For Modulo-2 UART
+
 
 
 // By default, this application uses the SPI interface to the Modulo.
